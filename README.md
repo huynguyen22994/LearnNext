@@ -10,6 +10,8 @@
 - 6. TypeScript: Hỗ trợ Typescript để dể dàng check kiểu dữ liệu
 - 7. Không cần phải config Babel, Webpack phức tạp như React App nữa, mà Next đã làm thay
 
+![](/images/comparison-diagram.png)
+
 ## App Router vs Pages Router
 Next.js có hai bộ định tuyến khác nhau: the App Router và the Pages Router.
     - App Router: là bộ định tuyến mới hơn cho phép bạn sử dụng các tính năng mới nhất của React, chẳng hạn như Thành phần máy chủ và Truyền phát
@@ -39,3 +41,139 @@ Next.js có hai bộ định tuyến khác nhau: the App Router và the Pages Ro
     - https://nextjs.org/docs/pages/building-your-application/routing/middleware
     - https://nextjs.org/docs/app/building-your-application/rendering/server-components#react-server-components-alpha
     - https://vercel.com/features/edge-functions
+
+
+## Pre-Rendering và Non Pre-Rendering
+
+![](/images/pre-rendering.png)
+
+### Two Forms of Pre-rendering
+Next.js có 2 loại pre-rendering: Static Generation and Server-side Rendering.
+
+- Static Generation là phương thức kết xuất trước tạo HTML tại thời điểm xây dựng. HTML được hiển thị trước sau đó được sử dụng lại trên mỗi yêu cầu.
+- Server-side Rendering là phương thức kết xuất trước tạo HTML trên mỗi yêu cầu.
+
+![](/images/2-types-pre-rendering.png)
+
+Quan trọng, Next.js cho phép bạn chọn pre-rendering form nào sẽ sử dụng cho mỗi trang. Bạn có thể tạo ứng dụng Next.js "hybrid" bằng cách sử dụng Static Generation cho hầu hết các trang và sử dụng Server-side Rendering cho các trang khác.
+
+![](/images/types-prerender.png)
+
+### Khi nào nên sử dụng Static Generation so với Server-side Rendering
+
+Chúng tôi khuyên bạn nên sử dụng Static Generation (có và không có dữ liệu) bất cứ khi nào có thể vì trang của bạn có thể được xây dựng một lần và được CDN phục vụ, điều này làm cho nó nhanh hơn nhiều so với việc máy chủ hiển thị trang theo mọi yêu cầu.
+
+Bạn có thể sử dụng Static Generation cho nhiều loại trang, bao gồm:
+- Marketing pages
+- Blog posts
+- E-commerce product listings
+- Help and documentation
+
+Bạn nên tự hỏi: "Tôi có thể hiển thị trước trang này trước yêu cầu của người dùng không?" Nếu câu trả lời là có, thì bạn nên chọn Static Generation.
+
+Mặt khác, Tạo tĩnh không phải là một ý tưởng hay nếu bạn không thể hiển thị trước một trang trước yêu cầu của người dùng. Có thể trang của bạn hiển thị dữ liệu được cập nhật thường xuyên và nội dung trang thay đổi theo mọi yêu cầu.
+
+Trong trường hợp đó, bạn có thể sử dụng Server-side Rendering. Nó sẽ chậm hơn, nhưng trang được hiển thị trước sẽ luôn được cập nhật. Hoặc bạn có thể bỏ qua kết xuất trước và sử dụng JavaScript phía máy khách để điền dữ liệu được cập nhật thường xuyên.
+
+![](./images/type-renders.png)
+
+### Static Generation with and without Data
+
+- Tạo static generation không có fetching data từ db
+
+![](./images/static-ge-without-data.png)
+
+- tạo static generation với lấy data từ server
+
+![](./images/static-ge-with-data.png)
+
+
+Kết xuất trước và tìm nạp dữ liệu
+Tạo tĩnh có và không có dữ liệu
+Tạo tĩnh có thể được thực hiện có và không có dữ liệu.
+
+Cho đến nay, tất cả các trang chúng tôi đã tạo không yêu cầu tìm nạp dữ liệu ngoài. Các trang đó sẽ tự động được tạo tĩnh khi ứng dụng được xây dựng để sản xuất.
+
+
+Tuy nhiên, đối với một số trang, bạn có thể không hiển thị được HTML mà không tìm nạp một số dữ liệu ngoài trước. Có thể bạn cần truy cập hệ thống tệp, tìm nạp API bên ngoài hoặc truy vấn cơ sở dữ liệu của bạn tại thời điểm xây dựng. Tiếp theo.js hỗ trợ trường hợp này - Tạo tĩnh với dữ liệu - ra khỏi hộp.
+
+
+Tạo tĩnh với Dữ liệu bằng `getStaticProps``
+
+```
+export default function Home(props) { ... }
+
+export async function getStaticProps() {
+  // Get external data from the file system, API, DB, etc.
+  const data = ...
+
+  // The value of the `props` key will be
+  //  passed to the `Home` component
+  return {
+    props: ...
+  }
+}
+```
+
+Về cơ bản, `getStaticProps` cho phép bạn nói với Next.js: "Này, trang này có một số phụ thuộc dữ liệu - vì vậy khi bạn hiển thị trước trang này tại thời build time in production, hãy đảm bảo giải quyết chúng trước!"
+    Lưu ý: Trong chế độ phát triển, getStaticProps chạy trên mỗi yêu cầu thay thế.
+
+Development vs. Production
+- Trong mội trường dev (npm run dev dev hoặc yarn dev), getStaticProps chạy trên mọi yêu cầu.
+- Trong môi trường production, getStaticProps chạy tại build time. However, this behavior can be enhanced using the `fallback` key returned by getStaticPaths
+
+### Server Side Rendering
+
+If you need to fetch data at request time instead of at build time, you can try Server-side Rendering.
+
+![](/images/ssr.png)
+
+To use `Server-side Rendering`, you need to export `getServerSideProps` instead of `getStaticProps` from your page.
+
+```
+export async function getServerSideProps(context) {
+  return {
+    props: {
+      // props for your component
+    },
+  };
+}
+```
+
+Bạn chỉ nên sử dụng `getServerSideProps` nếu bạn cần render trước một trang có dữ liệu phải được tìm nạp tại thời điểm request. Thời gian đến byte đầu tiên (TTFB) sẽ chậm hơn `getStaticProps` vì máy chủ phải tính toán kết quả trên mọi yêu cầu và kết quả không thể được lưu trữ bởi CDN mà không có cấu hình bổ sung.
+
+### Client-side Rendering
+
+Nếu bạn không cần kết xuất trước dữ liệu, bạn cũng có thể sử dụng chiến lược sau (được gọi là csr):
+
+![](/images/csr.png)
+
+### SWR
+
+- https://swr.vercel.app/
+
+Nhóm nghiên cứu đằng sau Next.js đã tạo ra một hook React để tìm nạp dữ liệu được gọi là `SWR`. Chúng tôi thực sự khuyên bạn nên sử dụng nó nếu bạn đang tìm nạp dữ liệu ở phía máy khách. Nó xử lý bộ nhớ đệm, xác nhận lại, theo dõi tiêu điểm, lấy lại khoảng thời gian và hơn thế nữa. Chúng tôi sẽ không đề cập đến chi tiết ở đây, nhưng đây là một ví dụ sử dụng:
+
+```
+import useSWR from 'swr';
+
+function Profile() {
+  const { data, error } = useSWR('/api/user', fetch);
+
+  if (error) return <div>failed to load</div>;
+  if (!data) return <div>loading...</div>;
+  return <div>hello {data.name}!</div>;
+}
+```
+
+## Dynamic Routes
+
+Trong bài học này, bạn sẽ học:
+
+- 1. Cách tạo tĩnh các trang có tuyến động bằng `getStaticPaths`.
+- 2. Cách viết `getStaticProps` để lấy dữ liệu cho mỗi bài đăng trên blog.
+- 3. Cách hiển thị đánh dấu bằng `remark`.
+- 4. Làm thế nào để in chuỗi ngày tháng đẹp.
+- 5. Cách liên kết đến một trang có `dynamic routes`.
+- 6. Một số thông tin hữu ích về các `dynamic routes`.
+
