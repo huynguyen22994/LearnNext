@@ -177,3 +177,62 @@ Trong bài học này, bạn sẽ học:
 - 5. Cách liên kết đến một trang có `dynamic routes`.
 - 6. Một số thông tin hữu ích về các `dynamic routes`.
 
+### Page Path Depends on External Data
+
+![](/images/dynamicroutes.png)
+
+dynamic routes là kiểu [id].js trong thư mục page. `id` được gôi là remark
+
+![](./images/dynamicroutes-2.png)
+
+Tóm tắt cách hoạt động của Dynamic Route phía hình trên.
+
+### Fallback
+Hãy nhớ lại rằng chúng tôi đã trả về fallback: false từ getStaticPaths. Điều này có nghĩa là gì?
+
+Nếu fallback là false, thì bất kỳ đường dẫn nào không được trả về bởi getStaticPaths sẽ dẫn đến trang 404.
+
+Nếu fallback là true, thì hành vi của getStaticProps sẽ thay đổi:
+
+Các đường dẫn được trả về từ getStaticPaths sẽ được hiển thị thành HTML tại thời điểm xây dựng.
+Các đường dẫn chưa được tạo tại thời điểm xây dựng sẽ không dẫn đến trang 404. Thay vào đó, Next.js sẽ phục vụ một phiên bản "dự phòng" của trang trên yêu cầu đầu tiên đến một đường dẫn như vậy.
+Trong nền, Tiếp theo.js sẽ tạo tĩnh đường dẫn được yêu cầu. Các yêu cầu tiếp theo đến cùng một đường dẫn sẽ phục vụ trang được tạo, giống như các trang khác được hiển thị trước tại thời điểm xây dựng.
+Nếu fallback đang blocking, thì các đường dẫn mới sẽ được hiển thị phía máy chủ với getStaticProps và được lưu vào bộ nhớ cache cho các yêu cầu trong tương lai để nó chỉ xảy ra một lần trên mỗi đường dẫn.
+
+Điều này nằm ngoài phạm vi bài học của chúng tôi, nhưng bạn có thể tìm hiểu thêm về dự phòng: true và fallback: 'blocking' trong tài liệu fallback fallback: true.
+
+### Catch-all Routes
+
+Các tuyến đường động có thể được mở rộng để bắt tất cả các đường dẫn bằng cách thêm ba dấu chấm (...) bên trong dấu ngoặc. Chẳng hạn:
+
+- pages/posts/[...id].js khớp /posts/a, nhưng cũng có /posts/a/b, //posts/a/b/c, v.v./posts/a/posts/a/b
+
+Nếu bạn làm điều này, trong getStaticPaths, bạn phải trả về một mảng dưới dạng giá trị của khóa id như sau:
+```
+return [
+  {
+    params: {
+      // Statically Generates /posts/a/b/c
+      id: ['a', 'b', 'c'],
+    },
+  },
+  //...
+];
+```
+
+Và params.id một mảng trong getStaticProps:
+
+```
+export async function getStaticProps({ params }) {
+  // params.id will be like ['a', 'b', 'c']
+}
+```
+
+### API Routes
+
+Nếu bạn muốn truy cập router Next.js, bạn có thể làm như vậy bằng cách nhập hook useRouter từ next/router.
+
+Api Route sử dụng trong Next khi ở Ui dùng POST để gửi data, và Router Api nhân data và gửi nó đến API Backend ở máy chù khác. Cách này sẽ an toàn vì giấu dk endpoint máy chủ
+
+### Preview Mode
+Tìm hiểu thêm
